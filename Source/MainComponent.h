@@ -58,6 +58,10 @@ private:
 
 	AudioBuffer<float> audioBufferZero;
 	AudioBuffer<float> audioBufferOne;
+    
+    AudioFormatManager formatManager;
+    
+    bool fileSelected;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

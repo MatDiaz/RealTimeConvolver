@@ -9,7 +9,8 @@
 #include "MainComponent.h"
 
 //==============================================================================
-MainComponent::MainComponent()
+MainComponent::MainComponent():
+fileSelected(false)
 {
     
     addAndMakeVisible (leftButton = new TextButton ("leftButton"));
@@ -122,6 +123,8 @@ MainComponent::MainComponent()
 
     // specify the number of input and output channels that we want to open
     setAudioChannels (2, 2);
+    
+    formatManager.registerBasicFormats();
     
     updateGUI();
 }
@@ -244,18 +247,40 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 
 	if (buttonThatWasClicked == leftButton)
 	{
+        File outputFile;
+        
 		if (monoButton->getToggleState())
-		{
-			File monoFile = loadFiles("Ingrese Archivo Mono");
-		}
+			outputFile = loadFiles("Ingrese Archivo Mono");
+        
 		else if (interleveadStereoButton->getToggleState())
-		{
-			File stereoFile = loadFiles("Ingrese Archivo Estereo");
-		}
+			outputFile = loadFiles("Ingrese Archivo Estereo");
+        
 		else if (multiMonoStereoButton->getToggleState())
-		{
-			File fileL = loadFiles("Ingrese Canal L");
-		}
+			outputFile = loadFiles("Ingrese Canal L");
+       
+        if(fileSelected)
+        {
+            ScopedPointer<AudioFormatReader> audioReadOperator;
+            audioReadOperator = formatManager.createReaderFor(outputFile);
+            
+            AudioBuffer<float> tempBuffer(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
+            
+            audioBufferZero = tempBuffer;
+            audioBufferZero.clear();
+            
+            audioReadOperator->read(&audioBufferZero, 0, audioReadOperator->numChannels, 0, true, true);
+            
+            String newName, newAddress, newFs;
+            newName = "Nombre: " + outputFile.getFileName();
+            newAddress = CharPointer_UTF8 ("Direcci\xc3\xb3n: ");
+            newAddress = newAddress + outputFile.getFullPathName();
+            newFs = "F.Muestreo: " + String(audioReadOperator->sampleRate) + " Hz";
+            
+            nameLabelLeft->setText(newName, dontSendNotification);
+            leftAdress->setText(newAddress, dontSendNotification);
+            fsLabelLeft->setText(newFs, dontSendNotification);
+        }
+        
     }
 
     else if (buttonThatWasClicked == rightButton)
@@ -282,13 +307,21 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 
 File MainComponent::loadFiles(const String stringToShow)
 {
-	FileChooser newFileChooser(stringToShow, File::getSpecialLocation(File::userDesktopDirectory), ".wav");
+	FileChooser newFileChooser(stringToShow, File::getSpecialLocation(File::userDesktopDirectory), "*.wav");
+    
+    File newFile;
 
 	if (newFileChooser.browseForFileToOpen())
-	{
-		File newFile = newFileChooser.getResult();
-	}
-
+    {
+		newFile = newFileChooser.getResult();
+        fileSelected = true;
+    }
+    else
+    {
+        fileSelected = false;
+    }
+    
+    return newFile;
 }
 
 //==============================================================================
