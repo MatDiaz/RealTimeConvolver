@@ -38,6 +38,8 @@ public:
     
     void updateGUI();
 
+	void updateLabelText(File originFile, bool rightChannel, double samplingFrequency);
+
 private:
     //==============================================================================
     // Your private member variables go here...
@@ -61,7 +63,10 @@ private:
     
     AudioFormatManager formatManager;
     
-    bool fileSelected;
+    bool fileSelected, shouldBeProcessing;
+
+	dsp::Convolution convolutionEngine;
+	dsp::ProcessSpec convolutionProperties;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

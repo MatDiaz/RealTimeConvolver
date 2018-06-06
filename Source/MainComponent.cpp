@@ -10,9 +10,8 @@
 
 //==============================================================================
 MainComponent::MainComponent():
-fileSelected(false)
+fileSelected(false), shouldBeProcessing(false)
 {
-    
     addAndMakeVisible (leftButton = new TextButton ("leftButton"));
     leftButton->setButtonText (TRANS("IR Left"));
     leftButton->addListener (this);
@@ -120,7 +119,6 @@ fileSelected(false)
 
     setSize (400, 530);
 
-
     // specify the number of input and output channels that we want to open
     setAudioChannels (2, 2);
     
@@ -131,7 +129,6 @@ fileSelected(false)
 
 MainComponent::~MainComponent()
 {   
-    
     leftButton = nullptr;
     rightButton = nullptr;
     nameLabelLeft = nullptr;
@@ -153,13 +150,9 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+	convolutionProperties.sampleRate = sampleRate;
+	convolutionProperties.maximumBlockSize = samplesPerBlockExpected;
+	convolutionProperties.numChannels = 2;
 }
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
@@ -168,22 +161,17 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
     
     const int numChannels = bufferToFill.buffer->getNumChannels();
     
-    if (numChannels == 2)
-    {
-        float* channelL = bufferToFill.buffer->getWritePointer(0);
-        float* channelR = bufferToFill.buffer->getWritePointer(1);
-        
-        for (int i = 0; i < bufferToFill.buffer->getNumSamples(); i++)
-        {
-            
-        }
-    }
-    
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    bufferToFill.clearActiveBufferRegion();
+	if (shouldBeProcessing)
+	{
+		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
+		dsp::ProcessContextReplacing<float> ctx(tempAudioBlock);
+		convolutionEngine.process(ctx);
+	}
+	else
+	{
+		// (to prevent the output of random noise)
+		bufferToFill.clearActiveBufferRegion();
+	}
 }
 
 void MainComponent::releaseResources()
@@ -209,11 +197,11 @@ void MainComponent::updateGUI()
         rightAdress->setEnabled(false);
         fsLabelRight->setEnabled(false);
 
-		rightButton->setVisible(true);
+		rightButton->setVisible(false);
 
-		nameLabelRight->setVisible(true);
-		rightAdress->setVisible(true);
-		fsLabelRight->setVisible(true);
+		nameLabelRight->setVisible(false);
+		rightAdress->setVisible(false);
+		fsLabelRight->setVisible(false);
     }
     else if (isStereoMultiMono)
     {
@@ -242,11 +230,30 @@ void MainComponent::updateGUI()
 	}
 }
 
+void MainComponent::updateLabelText(File originFile, bool rightChannel, double samplingFrequency)
+{
+	String newName, newAddress, newFs;
+	newName = "Nombre: " + originFile.getFileName();
+	newAddress = CharPointer_UTF8("Direcci\xc3\xb3n: ");
+	newAddress = newAddress + originFile.getFullPathName();
+	newFs = "F.Muestreo: " + String(samplingFrequency) + " Hz";
+	
+	if (!rightChannel)
+	{
+		nameLabelLeft->setText(newName, dontSendNotification);
+		leftAdress->setText(newAddress, dontSendNotification);
+		fsLabelLeft->setText(newFs, dontSendNotification);
+	}
+}
+
 void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 {
 
 	if (buttonThatWasClicked == leftButton)
-	{
+	{	
+		shouldBeProcessing = false;
+		convolutionEngine.reset();
+
         File outputFile;
         
 		if (monoButton->getToggleState())
@@ -257,30 +264,40 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
         
 		else if (multiMonoStereoButton->getToggleState())
 			outputFile = loadFiles("Ingrese Canal L");
-       
+
+		// Si el archivo seleccionado se carga de manera correcta
+	    // El booleano fileSelected se modifica desde el método loadFiles
         if(fileSelected)
-        {
+        {	
+			// Creamos una clase que nos permita leer el archivo de audio que acabamos de crear
+			// Esta clase depende explicitamente del objeto formatManager, creado desde el header
+			// El objeto formatManager es quien permite decodificar los diferentes formatos de audio (.wav, .mp3, .aiff...)
             ScopedPointer<AudioFormatReader> audioReadOperator;
             audioReadOperator = formatManager.createReaderFor(outputFile);
+			// Se crea un lector para el archivo de entrada
             
+			// Aún no hemos guardado los datos del audio en ninguna variable, antes de esto necesitamos crear un buffer
+			// con el tamaño en muestras y la cantidad de canales necesarios para almacenar los datos del archivo de audio
             AudioBuffer<float> tempBuffer(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
-            
+			tempBuffer.clear();
+			// Luego se llena el buffer de ceros
+
+			// pasamos el buffer que recien creamos, al buffer que habíamos creado desde el header para que funcione como
+			// un miembro de la clase (de manera "global")
             audioBufferZero = tempBuffer;
-            audioBufferZero.clear();
-            
-            audioReadOperator->read(&audioBufferZero, 0, audioReadOperator->numChannels, 0, true, true);
-            
-            String newName, newAddress, newFs;
-            newName = "Nombre: " + outputFile.getFileName();
-            newAddress = CharPointer_UTF8 ("Direcci\xc3\xb3n: ");
-            newAddress = newAddress + outputFile.getFullPathName();
-            newFs = "F.Muestreo: " + String(audioReadOperator->sampleRate) + " Hz";
-            
-            nameLabelLeft->setText(newName, dontSendNotification);
-            leftAdress->setText(newAddress, dontSendNotification);
-            fsLabelLeft->setText(newFs, dontSendNotification);
+           
+            // Se leen los datos como tal y se guardan en el buffer
+			audioReadOperator->read(&audioBufferZero, 0, audioReadOperator->numChannels, 0, true, true);
+			
+			convolutionEngine.prepare(convolutionProperties);
+			
+			if (audioReadOperator->numChannels == 1)
+				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, false, false, false, 0);
+			else
+				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
         }
-        
+
+		shouldBeProcessing = true;
     }
 
     else if (buttonThatWasClicked == rightButton)
@@ -293,15 +310,16 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
     }
     else if (buttonThatWasClicked == monoButton)
     {
-		updateGUI();
+		updateGUI(); // Si se va a cargar una respuesta al impulso mono. Se actualiza la interaz gráfica
     }
     else if (buttonThatWasClicked == interleveadStereoButton)
     {
-		updateGUI();
+		updateGUI(); // Si se va a cargar una respuesta al impulso estéreo entrelazado. Se actualiza la interaz gráfica
     }
     else if (buttonThatWasClicked == multiMonoStereoButton)
     {
-		updateGUI();
+		updateGUI(); // Si se va a cargar una respuesta al impulso mono. Se actualiza la interaz gráfica
+
     }   
 }
 
