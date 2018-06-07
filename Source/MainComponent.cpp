@@ -158,9 +158,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     // Your audio-processing code goes here
-    
-    const int numChannels = bufferToFill.buffer->getNumChannels();
-    
+
 	if (shouldBeProcessing)
 	{
 		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
@@ -276,23 +274,13 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
             audioReadOperator = formatManager.createReaderFor(outputFile);
 			// Se crea un lector para el archivo de entrada
             
-			// Aún no hemos guardado los datos del audio en ninguna variable, antes de esto necesitamos crear un buffer
-			// con el tamaño en muestras y la cantidad de canales necesarios para almacenar los datos del archivo de audio
-            AudioBuffer<float> tempBuffer(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
-			tempBuffer.clear();
-			// Luego se llena el buffer de ceros
-
-			// pasamos el buffer que recien creamos, al buffer que habíamos creado desde el header para que funcione como
-			// un miembro de la clase (de manera "global")
-            audioBufferZero = tempBuffer;
-           
+            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
+            
             // Se leen los datos como tal y se guardan en el buffer
-			audioReadOperator->read(&audioBufferZero, 0, audioReadOperator->numChannels, 0, true, true);
-			
-			convolutionEngine.prepare(convolutionProperties);
+            audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, true);
 			
 			if (audioReadOperator->numChannels == 1)
-				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, false, false, false, 0);
+				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
 			else
 				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
         }
