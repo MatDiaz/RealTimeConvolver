@@ -63,7 +63,7 @@ private:
     
     AudioFormatManager formatManager;
     
-    bool fileSelected, shouldBeProcessing;
+    bool fileSelected, shouldBeProcessing, isBinaural;
 
 	dsp::Convolution convolutionEngine;
 	dsp::ProcessSpec convolutionProperties;

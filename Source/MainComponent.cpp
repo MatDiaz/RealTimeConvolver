@@ -10,7 +10,7 @@
 
 //==============================================================================
 MainComponent::MainComponent():
-fileSelected(false), shouldBeProcessing(false)
+fileSelected(false), shouldBeProcessing(false), isBinaural(false)
 {
     addAndMakeVisible (leftButton = new TextButton ("leftButton"));
     leftButton->setButtonText (TRANS("IR Left"));
@@ -158,6 +158,10 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     // Your audio-processing code goes here
+	if (isBinaural)
+	{
+		
+	}
 
 	if (shouldBeProcessing)
 	{
@@ -250,18 +254,23 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 	if (buttonThatWasClicked == leftButton)
 	{	
 		shouldBeProcessing = false;
-		convolutionEngine.reset();
+		// convolutionEngine.reset();
 
-        File outputFile;
+        File outputFile, outputFileL, outputFileR;
         
 		if (monoButton->getToggleState())
+		{
 			outputFile = loadFiles("Ingrese Archivo Mono");
-        
+		}
 		else if (interleveadStereoButton->getToggleState())
+		{
 			outputFile = loadFiles("Ingrese Archivo Estereo");
-        
+		}
 		else if (multiMonoStereoButton->getToggleState())
-			outputFile = loadFiles("Ingrese Canal L");
+		{
+			outputFileL = loadFiles("Ingrese Canal L");
+			outputFileR = loadFiles("Ingrese Canal R");
+		}
 
 		// Si el archivo seleccionado se carga de manera correcta
 	    // El booleano fileSelected se modifica desde el método loadFiles
@@ -274,15 +283,16 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
             audioReadOperator = formatManager.createReaderFor(outputFile);
 			// Se crea un lector para el archivo de entrada
             
-            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
-            
+            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);			
+
             // Se leen los datos como tal y se guardan en el buffer
             audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, true);
-			
-			if (audioReadOperator->numChannels == 1)
-				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
-			else
-				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
+
+			(audioReadOperator->numChannels == 2) ? isBinaural = true: isBinaural = false;
+
+			convolutionEngine.prepare(convolutionProperties);
+
+			convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, isBinaural, false, false, 0);
         }
 
 		shouldBeProcessing = true;
@@ -339,8 +349,6 @@ void MainComponent::paint (Graphics& g)
         int x = 28, y = 16, width = 350, height = 32;
         String text (TRANS("Real Time Convolver"));
         Colour fillColour = Colours::white;
-        //[UserPaintCustomArguments] Customize the painting arguments here..
-        //[/UserPaintCustomArguments]
         g.setColour (fillColour);
         g.setFont (Font (27.40f, Font::plain).withTypefaceStyle ("Bold"));
         g.drawText (text, x, y, width, height,
