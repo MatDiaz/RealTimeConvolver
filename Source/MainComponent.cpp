@@ -10,19 +10,14 @@
 
 //==============================================================================
 MainComponent::MainComponent():
-fileSelected(false), shouldBeProcessing(false), isBinaural(false)
+fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
+,audioDrawCache(5), audioDrawObject(512, formatManager, audioDrawCache)
 {
-    addAndMakeVisible (leftButton = new TextButton ("leftButton"));
-    leftButton->setButtonText (TRANS("IR Left"));
-    leftButton->addListener (this);
+    addAndMakeVisible (loadButton = new TextButton ("loadButton"));
+    loadButton->setButtonText (CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
+    loadButton->addListener (this);
 
-    leftButton->setBounds (24, 176, 150, 24);
-
-    addAndMakeVisible (rightButton = new TextButton ("new button"));
-    rightButton->setButtonText (TRANS("IR Right"));
-    rightButton->addListener (this);
-
-    rightButton->setBounds (24, 320, 150, 24);
+    loadButton->setBounds (127, 130, 150, 24);
 
     addAndMakeVisible (nameLabelLeft = new Label ("nameLabelLeft",
                                                   TRANS("Nombre:")));
@@ -32,7 +27,7 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false)
     nameLabelLeft->setColour (TextEditor::textColourId, Colours::black);
     nameLabelLeft->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    nameLabelLeft->setBounds (24, 248, 344, 24);
+    nameLabelLeft->setBounds (24, 200, 344, 24);
 
     addAndMakeVisible (leftAdress = new Label ("leftAdress",
                                                CharPointer_UTF8 ("Direcci\xc3\xb3n: ")));
@@ -42,7 +37,7 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false)
     leftAdress->setColour (TextEditor::textColourId, Colours::black);
     leftAdress->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    leftAdress->setBounds (24, 216, 344, 24);
+    leftAdress->setBounds (24, 168, 344, 24);
 
     addAndMakeVisible (fsLabelLeft = new Label ("fsLabelLeft",
                                                 TRANS("F. Muestreo: ")));
@@ -52,96 +47,61 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false)
     fsLabelLeft->setColour (TextEditor::textColourId, Colours::black);
     fsLabelLeft->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    fsLabelLeft->setBounds (24, 280, 344, 24);
-
-    addAndMakeVisible (nameLabelRight = new Label ("nameLabelRight",
-                                                   TRANS("Nombre:")));
-    nameLabelRight->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    nameLabelRight->setJustificationType (Justification::centredLeft);
-    nameLabelRight->setEditable (false, false, false);
-    nameLabelRight->setColour (TextEditor::textColourId, Colours::black);
-    nameLabelRight->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    nameLabelRight->setBounds (24, 389, 344, 24);
-
-    addAndMakeVisible (rightAdress = new Label ("rightAdress",
-                                                CharPointer_UTF8 ("Direcci\xc3\xb3n: ")));
-    rightAdress->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    rightAdress->setJustificationType (Justification::centredLeft);
-    rightAdress->setEditable (false, false, false);
-    rightAdress->setColour (TextEditor::textColourId, Colours::black);
-    rightAdress->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    rightAdress->setBounds (24, 360, 344, 24);
-
-    addAndMakeVisible (fsLabelRight = new Label ("fsLabelRight",
-                                                 TRANS("F. Muestreo: ")));
-    fsLabelRight->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    fsLabelRight->setJustificationType (Justification::centredLeft);
-    fsLabelRight->setEditable (false, false, false);
-    fsLabelRight->setColour (TextEditor::textColourId, Colours::black);
-    fsLabelRight->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    fsLabelRight->setBounds (24, 420, 344, 24);
-
-    addAndMakeVisible (stopButton = new TextButton ("stopButton"));
-    stopButton->setButtonText (TRANS("STAHP"));
-    stopButton->addListener (this);
-
-    stopButton->setBounds (24, 464, 344, 24);
+    fsLabelLeft->setBounds (24, 264, 344, 24);
 
     addAndMakeVisible (groupComponent = new GroupComponent ("new group",
                                                             String()));
 
-    groupComponent->setBounds (16, 56, 368, 96);
+    groupComponent->setBounds (24, 59, 360, 56);
 
     addAndMakeVisible (monoButton = new ToggleButton ("monoButton"));
-    monoButton->setButtonText (TRANS("IR Mono"));
-	monoButton->setToggleState(true, dontSendNotification);
+    monoButton->setButtonText (CharPointer_UTF8("IR Mono/Est\xc3\xa9reo"));
     monoButton->setRadioGroupId (1);
     monoButton->addListener (this);
 
-    monoButton->setBounds (32, 80, 88, 24);
+    monoButton->setBounds (32, 78, 152, 24);
 
     addAndMakeVisible (interleveadStereoButton = new ToggleButton ("interleveadStereoButton"));
-    interleveadStereoButton->setButtonText (CharPointer_UTF8 ("IR Est\xc3\xa9reo Entrelazado"));
+    interleveadStereoButton->setButtonText (TRANS("IR Muti-Mono"));
     interleveadStereoButton->setRadioGroupId (1);
     interleveadStereoButton->addListener (this);
 
-    interleveadStereoButton->setBounds (173, 80, 184, 24);
+    interleveadStereoButton->setBounds (216, 78, 160, 24);
 
-    addAndMakeVisible (multiMonoStereoButton = new ToggleButton ("multiMonoStereoButton"));
-    multiMonoStereoButton->setButtonText (CharPointer_UTF8 ("IR Est\xc3\xa9reo Multi-Mono"));
-    multiMonoStereoButton->setRadioGroupId (1);
-    multiMonoStereoButton->addListener (this);
+    addAndMakeVisible (channelsLabel = new Label ("channelsLabel",
+		CharPointer_UTF8("Configuraci\xc3\xb3n\n")));
+    channelsLabel->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
+    channelsLabel->setJustificationType (Justification::centredLeft);
+    channelsLabel->setEditable (false, false, false);
+    channelsLabel->setColour (TextEditor::textColourId, Colours::black);
+    channelsLabel->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    multiMonoStereoButton->setBounds (32, 117, 184, 24);
+    channelsLabel->setBounds (24, 232, 344, 24);
+
+    addAndMakeVisible (processButton = new TextButton ("processButton"));
+    processButton->setButtonText (TRANS("Procesar"));
+    processButton->addListener (this);
+
+    processButton->setBounds (32, 488, 344, 24);
 
     setSize (400, 530);
 
-    // specify the number of input and output channels that we want to open
     setAudioChannels (2, 2);
     
     formatManager.registerBasicFormats();
-    
-    updateGUI();
 }
 
 MainComponent::~MainComponent()
 {   
-    leftButton = nullptr;
-    rightButton = nullptr;
-    nameLabelLeft = nullptr;
-    leftAdress = nullptr;
-    fsLabelLeft = nullptr;
-    nameLabelRight = nullptr;
-    rightAdress = nullptr;
-    fsLabelRight = nullptr;
-    stopButton = nullptr;
-    groupComponent = nullptr;
-    monoButton = nullptr;
-    interleveadStereoButton = nullptr;
-    multiMonoStereoButton = nullptr;
+	loadButton = nullptr;
+	nameLabelLeft = nullptr;
+	leftAdress = nullptr;
+	fsLabelLeft = nullptr;
+	groupComponent = nullptr;
+	monoButton = nullptr;
+	interleveadStereoButton = nullptr;
+	channelsLabel = nullptr;
+	processButton = nullptr;
 
     // This shuts down the audio device and clears the audio source.
     shutdownAudio();
@@ -184,77 +144,44 @@ void MainComponent::releaseResources()
     // For more details, see the help for AudioProcessor::releaseResources()
 }
 
-void MainComponent::updateGUI()
-{
-	bool isMono = monoButton->getToggleState();
-	bool isStereoInterleaved = interleveadStereoButton->getToggleState();
-	bool isStereoMultiMono = multiMonoStereoButton->getToggleState();
-    
-    if (isMono)
-    {
-        leftButton->setButtonText("IR Mono");
-        rightButton->setEnabled(false);
-        
-        nameLabelRight->setEnabled(false);
-        rightAdress->setEnabled(false);
-        fsLabelRight->setEnabled(false);
-
-		rightButton->setVisible(false);
-
-		nameLabelRight->setVisible(false);
-		rightAdress->setVisible(false);
-		fsLabelRight->setVisible(false);
-    }
-    else if (isStereoMultiMono)
-    {
-        rightButton->setEnabled(true);
-        leftButton->setButtonText("IR Left");
-        rightButton->setButtonText("IR Right");
-        
-        nameLabelRight->setEnabled(true);
-        rightAdress->setEnabled(true);
-        fsLabelRight->setEnabled(true);
-
-		rightButton->setVisible(true);
-
-		nameLabelRight->setVisible(true);
-		rightAdress->setVisible(true);
-		fsLabelRight->setVisible(true);
-    }
-	else if (isStereoInterleaved)
-	{
-		leftButton->setButtonText(CharPointer_UTF8("IR Est\xc3\xa9reo"));
-		rightButton->setVisible(false);
-
-		nameLabelRight->setVisible(false);
-		rightAdress->setVisible(false);
-		fsLabelRight->setVisible(false);
-	}
-}
-
 void MainComponent::updateLabelText(File originFile, bool rightChannel, double samplingFrequency)
 {
-	String newName, newAddress, newFs;
+	String newName, newAddress, newFs, newConfig;
 	newName = "Nombre: " + originFile.getFileName();
 	newAddress = CharPointer_UTF8("Direcci\xc3\xb3n: ");
 	newAddress = newAddress + originFile.getFullPathName();
 	newFs = "F.Muestreo: " + String(samplingFrequency) + " Hz";
+
+	nameLabelLeft->setText(newName, dontSendNotification);
+	leftAdress->setText(newAddress, dontSendNotification);
+	fsLabelLeft->setText(newFs, dontSendNotification);
 	
-	if (!rightChannel)
+	if (rightChannel){ channelsLabel->setText(CharPointer_UTF8("Configuraci\xc3\xb3n: Est\xc3\xa9reo"), dontSendNotification);}
+	else { channelsLabel->setText(CharPointer_UTF8("Configuraci\xc3\xb3n: Mono"), dontSendNotification);}
+}
+
+void MainComponent::buttonProcessChange()
+{
+	if (shouldBeProcessing)
 	{
-		nameLabelLeft->setText(newName, dontSendNotification);
-		leftAdress->setText(newAddress, dontSendNotification);
-		fsLabelLeft->setText(newFs, dontSendNotification);
+		shouldBeProcessing = false;
+		processButton->setButtonText("Procesar");
+	}
+	else
+	{
+		shouldBeProcessing = true;
+		processButton->setButtonText("Detener");
 	}
 }
 
 void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 {
 
-	if (buttonThatWasClicked == leftButton)
+	(shouldBeProcessing) ? buttonProcessChange():1;
+
+	if (buttonThatWasClicked == loadButton)
 	{	
-		shouldBeProcessing = false;
-		// convolutionEngine.reset();
+		convolutionEngine.reset();
 
         File outputFile, outputFileL, outputFileR;
         
@@ -264,16 +191,12 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 		}
 		else if (interleveadStereoButton->getToggleState())
 		{
-			outputFile = loadFiles("Ingrese Archivo Estereo");
-		}
-		else if (multiMonoStereoButton->getToggleState())
-		{
-			outputFileL = loadFiles("Ingrese Canal L");
-			outputFileR = loadFiles("Ingrese Canal R");
+			outputFileL = loadFiles("Ingrese Archivo L");
+			outputFileR = loadFiles("Ingrese Archivo R");
 		}
 
 		// Si el archivo seleccionado se carga de manera correcta
-	    // El booleano fileSelected se modifica desde el método loadFiles
+	    // El booleano fileSelected se modifica desde el mÃ©todo loadFiles
         if(fileSelected)
         {	
 			// Creamos una clase que nos permita leer el archivo de audio que acabamos de crear
@@ -292,33 +215,29 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 
 			convolutionEngine.prepare(convolutionProperties);
 
-			convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, isBinaural, false, false, 0);
+			convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
+
+			updateLabelText(outputFile, isBinaural, audioReadOperator->sampleRate);
+
+			audioDrawObject.setSource(new FileInputSource(outputFile));
+
+			shouldRepaint = true;
+			
+			repaint();
         }
-
-		shouldBeProcessing = true;
-    }
-
-    else if (buttonThatWasClicked == rightButton)
-    {
-		File fileR = loadFiles("Ingrese Canal R");
-    }
-    else if (buttonThatWasClicked == stopButton)
-    {
-		shutdownAudio();
     }
     else if (buttonThatWasClicked == monoButton)
     {
-		updateGUI(); // Si se va a cargar una respuesta al impulso mono. Se actualiza la interaz gráfica
+		loadButton->setButtonText(CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
     }
     else if (buttonThatWasClicked == interleveadStereoButton)
     {
-		updateGUI(); // Si se va a cargar una respuesta al impulso estéreo entrelazado. Se actualiza la interaz gráfica
+		loadButton->setButtonText("Cargar IR Multi-Mono");
     }
-    else if (buttonThatWasClicked == multiMonoStereoButton)
-    {
-		updateGUI(); // Si se va a cargar una respuesta al impulso mono. Se actualiza la interaz gráfica
-
-    }   
+	else if (buttonThatWasClicked == processButton)
+	{
+		buttonProcessChange();
+	}
 }
 
 File MainComponent::loadFiles(const String stringToShow)
@@ -353,6 +272,26 @@ void MainComponent::paint (Graphics& g)
         g.setFont (Font (27.40f, Font::plain).withTypefaceStyle ("Bold"));
         g.drawText (text, x, y, width, height,
                     Justification::centred, true);
+    }
+
+    {
+        float x = 29.0f, y = 305.0f, width = 356.0f, height = 168.0f;
+        Colour fillColour = Colour (0xff3c3c3c);
+        Colour strokeColour = Colours::white;
+        g.setColour (fillColour);
+        g.fillRoundedRectangle (x, y, width, height, 10.000f);
+        g.setColour (strokeColour);
+        g.drawRoundedRectangle (x, y, width, height, 10.000f, 0.500f);
+
+		Rectangle<int> thumbnailBounds(x, y, width, height);
+
+		if (shouldRepaint)
+		{	
+			g.setColour(Colours::white);
+			g.fillRect(thumbnailBounds);
+			g.setColour(Colours::white);
+			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 1.0f);
+		}
     }
 }
 

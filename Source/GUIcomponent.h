@@ -56,19 +56,15 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TextButton> leftButton;
-    ScopedPointer<TextButton> rightButton;
+    ScopedPointer<TextButton> loadButton;
     ScopedPointer<Label> nameLabelLeft;
     ScopedPointer<Label> leftAdress;
     ScopedPointer<Label> fsLabelLeft;
-    ScopedPointer<Label> nameLabelRight;
-    ScopedPointer<Label> rightAdress;
-    ScopedPointer<Label> fsLabelRight;
-    ScopedPointer<TextButton> stopButton;
     ScopedPointer<GroupComponent> groupComponent;
     ScopedPointer<ToggleButton> monoButton;
     ScopedPointer<ToggleButton> interleveadStereoButton;
-    ScopedPointer<ToggleButton> multiMonoStereoButton;
+    ScopedPointer<Label> channelsLabel;
+    ScopedPointer<TextButton> processButton;
 
 
     //==============================================================================

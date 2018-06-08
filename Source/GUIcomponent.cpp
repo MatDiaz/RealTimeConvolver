@@ -32,17 +32,11 @@ GUIcomponent::GUIcomponent ()
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    addAndMakeVisible (leftButton = new TextButton ("leftButton"));
-    leftButton->setButtonText (TRANS("IR Left"));
-    leftButton->addListener (this);
+    addAndMakeVisible (loadButton = new TextButton ("loadButton"));
+    loadButton->setButtonText (CharPointer_UTF8 ("Cargar IR Mono/Est\xc3\xa9ro"));
+    loadButton->addListener (this);
 
-    leftButton->setBounds (24, 176, 150, 24);
-
-    addAndMakeVisible (rightButton = new TextButton ("new button"));
-    rightButton->setButtonText (TRANS("IR Right"));
-    rightButton->addListener (this);
-
-    rightButton->setBounds (24, 320, 150, 24);
+    loadButton->setBounds (127, 130, 150, 24);
 
     addAndMakeVisible (nameLabelLeft = new Label ("nameLabelLeft",
                                                   TRANS("Nombre:")));
@@ -52,7 +46,7 @@ GUIcomponent::GUIcomponent ()
     nameLabelLeft->setColour (TextEditor::textColourId, Colours::black);
     nameLabelLeft->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    nameLabelLeft->setBounds (24, 248, 344, 24);
+    nameLabelLeft->setBounds (24, 200, 344, 24);
 
     addAndMakeVisible (leftAdress = new Label ("leftAdress",
                                                CharPointer_UTF8 ("Direcci\xc3\xb3n: ")));
@@ -62,7 +56,7 @@ GUIcomponent::GUIcomponent ()
     leftAdress->setColour (TextEditor::textColourId, Colours::black);
     leftAdress->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    leftAdress->setBounds (24, 216, 344, 24);
+    leftAdress->setBounds (24, 168, 344, 24);
 
     addAndMakeVisible (fsLabelLeft = new Label ("fsLabelLeft",
                                                 TRANS("F. Muestreo: ")));
@@ -72,69 +66,42 @@ GUIcomponent::GUIcomponent ()
     fsLabelLeft->setColour (TextEditor::textColourId, Colours::black);
     fsLabelLeft->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    fsLabelLeft->setBounds (24, 280, 344, 24);
-
-    addAndMakeVisible (nameLabelRight = new Label ("nameLabelRight",
-                                                   TRANS("Nombre:")));
-    nameLabelRight->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    nameLabelRight->setJustificationType (Justification::centredLeft);
-    nameLabelRight->setEditable (false, false, false);
-    nameLabelRight->setColour (TextEditor::textColourId, Colours::black);
-    nameLabelRight->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    nameLabelRight->setBounds (24, 389, 344, 24);
-
-    addAndMakeVisible (rightAdress = new Label ("rightAdress",
-                                                CharPointer_UTF8 ("Direcci\xc3\xb3n: ")));
-    rightAdress->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    rightAdress->setJustificationType (Justification::centredLeft);
-    rightAdress->setEditable (false, false, false);
-    rightAdress->setColour (TextEditor::textColourId, Colours::black);
-    rightAdress->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    rightAdress->setBounds (24, 360, 344, 24);
-
-    addAndMakeVisible (fsLabelRight = new Label ("fsLabelRight",
-                                                 TRANS("F. Muestreo: ")));
-    fsLabelRight->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
-    fsLabelRight->setJustificationType (Justification::centredLeft);
-    fsLabelRight->setEditable (false, false, false);
-    fsLabelRight->setColour (TextEditor::textColourId, Colours::black);
-    fsLabelRight->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
-
-    fsLabelRight->setBounds (24, 420, 344, 24);
-
-    addAndMakeVisible (stopButton = new TextButton ("stopButton"));
-    stopButton->setButtonText (TRANS("STAHP"));
-    stopButton->addListener (this);
-
-    stopButton->setBounds (24, 464, 344, 24);
+    fsLabelLeft->setBounds (24, 264, 344, 24);
 
     addAndMakeVisible (groupComponent = new GroupComponent ("new group",
                                                             String()));
 
-    groupComponent->setBounds (16, 56, 368, 96);
+    groupComponent->setBounds (24, 59, 360, 56);
 
     addAndMakeVisible (monoButton = new ToggleButton ("monoButton"));
-    monoButton->setButtonText (TRANS("IR Mono"));
+    monoButton->setButtonText (CharPointer_UTF8 ("IR Mono/Est\xc3\xa9reo"));
     monoButton->setRadioGroupId (1);
     monoButton->addListener (this);
 
-    monoButton->setBounds (32, 80, 88, 24);
+    monoButton->setBounds (32, 78, 152, 24);
 
     addAndMakeVisible (interleveadStereoButton = new ToggleButton ("interleveadStereoButton"));
-    interleveadStereoButton->setButtonText (CharPointer_UTF8 ("IR Est\xc3\xa9reo Entrelazado"));
+    interleveadStereoButton->setButtonText (TRANS("IR Muti-Mono"));
     interleveadStereoButton->setRadioGroupId (1);
     interleveadStereoButton->addListener (this);
 
-    interleveadStereoButton->setBounds (173, 80, 184, 24);
+    interleveadStereoButton->setBounds (216, 78, 160, 24);
 
-    addAndMakeVisible (multiMonoStereoButton = new ToggleButton ("multiMonoStereoButton"));
-    multiMonoStereoButton->setButtonText (CharPointer_UTF8 ("IR Est\xc3\xa9reo Multi-Mono"));
-    multiMonoStereoButton->setRadioGroupId (1);
-    multiMonoStereoButton->addListener (this);
+    addAndMakeVisible (channelsLabel = new Label ("channelsLabel",
+                                                  CharPointer_UTF8 ("Configuraci\xc3\xb3n\n")));
+    channelsLabel->setFont (Font (15.00f, Font::plain).withTypefaceStyle ("Regular"));
+    channelsLabel->setJustificationType (Justification::centredLeft);
+    channelsLabel->setEditable (false, false, false);
+    channelsLabel->setColour (TextEditor::textColourId, Colours::black);
+    channelsLabel->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    multiMonoStereoButton->setBounds (32, 117, 184, 24);
+    channelsLabel->setBounds (24, 232, 344, 24);
+
+    addAndMakeVisible (processButton = new TextButton ("processButton"));
+    processButton->setButtonText (TRANS("Procesar"));
+    processButton->addListener (this);
+
+    processButton->setBounds (32, 488, 344, 24);
 
 
     //[UserPreSize]
@@ -152,19 +119,15 @@ GUIcomponent::~GUIcomponent()
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
 
-    leftButton = nullptr;
-    rightButton = nullptr;
+    loadButton = nullptr;
     nameLabelLeft = nullptr;
     leftAdress = nullptr;
     fsLabelLeft = nullptr;
-    nameLabelRight = nullptr;
-    rightAdress = nullptr;
-    fsLabelRight = nullptr;
-    stopButton = nullptr;
     groupComponent = nullptr;
     monoButton = nullptr;
     interleveadStereoButton = nullptr;
-    multiMonoStereoButton = nullptr;
+    channelsLabel = nullptr;
+    processButton = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -191,6 +154,18 @@ void GUIcomponent::paint (Graphics& g)
                     Justification::centred, true);
     }
 
+    {
+        float x = 29.0f, y = 305.0f, width = 356.0f, height = 168.0f;
+        Colour fillColour = Colour (0xff3c3c3c);
+        Colour strokeColour = Colours::white;
+        //[UserPaintCustomArguments] Customize the painting arguments here..
+        //[/UserPaintCustomArguments]
+        g.setColour (fillColour);
+        g.fillRoundedRectangle (x, y, width, height, 10.000f);
+        g.setColour (strokeColour);
+        g.drawRoundedRectangle (x, y, width, height, 10.000f, 0.500f);
+    }
+
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
 }
@@ -209,20 +184,10 @@ void GUIcomponent::buttonClicked (Button* buttonThatWasClicked)
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == leftButton)
+    if (buttonThatWasClicked == loadButton)
     {
-        //[UserButtonCode_leftButton] -- add your button handler code here..
-        //[/UserButtonCode_leftButton]
-    }
-    else if (buttonThatWasClicked == rightButton)
-    {
-        //[UserButtonCode_rightButton] -- add your button handler code here..
-        //[/UserButtonCode_rightButton]
-    }
-    else if (buttonThatWasClicked == stopButton)
-    {
-        //[UserButtonCode_stopButton] -- add your button handler code here..
-        //[/UserButtonCode_stopButton]
+        //[UserButtonCode_loadButton] -- add your button handler code here..
+        //[/UserButtonCode_loadButton]
     }
     else if (buttonThatWasClicked == monoButton)
     {
@@ -234,10 +199,10 @@ void GUIcomponent::buttonClicked (Button* buttonThatWasClicked)
         //[UserButtonCode_interleveadStereoButton] -- add your button handler code here..
         //[/UserButtonCode_interleveadStereoButton]
     }
-    else if (buttonThatWasClicked == multiMonoStereoButton)
+    else if (buttonThatWasClicked == processButton)
     {
-        //[UserButtonCode_multiMonoStereoButton] -- add your button handler code here..
-        //[/UserButtonCode_multiMonoStereoButton]
+        //[UserButtonCode_processButton] -- add your button handler code here..
+        //[/UserButtonCode_processButton]
     }
 
     //[UserbuttonClicked_Post]
@@ -267,61 +232,46 @@ BEGIN_JUCER_METADATA
     <TEXT pos="28 16 350 32" fill="solid: ffffffff" hasStroke="0" text="Real Time Convolver"
           fontname="Default font" fontsize="27.39999999999999857891" kerning="0.00000000000000000000"
           bold="1" italic="0" justification="36" typefaceStyle="Bold"/>
+    <ROUNDRECT pos="29 305 356 168" cornerSize="10.00000000000000000000" fill="solid: ff3c3c3c"
+               hasStroke="1" stroke="0.5, mitered, butt" strokeColour="solid: ffffffff"/>
   </BACKGROUND>
-  <TEXTBUTTON name="leftButton" id="c84767a5b1b1a169" memberName="leftButton"
-              virtualName="" explicitFocusOrder="0" pos="24 176 150 24" buttonText="IR Left"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <TEXTBUTTON name="new button" id="ec47f28c6be456ad" memberName="rightButton"
-              virtualName="" explicitFocusOrder="0" pos="24 320 150 24" buttonText="IR Right"
+  <TEXTBUTTON name="loadButton" id="c84767a5b1b1a169" memberName="loadButton"
+              virtualName="" explicitFocusOrder="0" pos="127 130 150 24" buttonText="Cargar IR Mono/Est&#233;ro"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <LABEL name="nameLabelLeft" id="1ca1aba907c4db01" memberName="nameLabelLeft"
-         virtualName="" explicitFocusOrder="0" pos="24 248 344 24" edTextCol="ff000000"
+         virtualName="" explicitFocusOrder="0" pos="24 200 344 24" edTextCol="ff000000"
          edBkgCol="0" labelText="Nombre:" editableSingleClick="0" editableDoubleClick="0"
          focusDiscardsChanges="0" fontname="Default font" fontsize="15.00000000000000000000"
          kerning="0.00000000000000000000" bold="0" italic="0" justification="33"/>
   <LABEL name="leftAdress" id="a59c2a0fe6802c47" memberName="leftAdress"
-         virtualName="" explicitFocusOrder="0" pos="24 216 344 24" edTextCol="ff000000"
+         virtualName="" explicitFocusOrder="0" pos="24 168 344 24" edTextCol="ff000000"
          edBkgCol="0" labelText="Direcci&#243;n: " editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.00000000000000000000" kerning="0.00000000000000000000"
          bold="0" italic="0" justification="33"/>
   <LABEL name="fsLabelLeft" id="fdffeefa580fe0f9" memberName="fsLabelLeft"
-         virtualName="" explicitFocusOrder="0" pos="24 280 344 24" edTextCol="ff000000"
+         virtualName="" explicitFocusOrder="0" pos="24 264 344 24" edTextCol="ff000000"
          edBkgCol="0" labelText="F. Muestreo: " editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.00000000000000000000" kerning="0.00000000000000000000"
          bold="0" italic="0" justification="33"/>
-  <LABEL name="nameLabelRight" id="1cb4e6111d21cf0c" memberName="nameLabelRight"
-         virtualName="" explicitFocusOrder="0" pos="24 389 344 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="Nombre:" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="15.00000000000000000000"
-         kerning="0.00000000000000000000" bold="0" italic="0" justification="33"/>
-  <LABEL name="rightAdress" id="c461b69f88aabfb" memberName="rightAdress"
-         virtualName="" explicitFocusOrder="0" pos="24 360 344 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="Direcci&#243;n: " editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15.00000000000000000000" kerning="0.00000000000000000000"
-         bold="0" italic="0" justification="33"/>
-  <LABEL name="fsLabelRight" id="1f8148501ba592c2" memberName="fsLabelRight"
-         virtualName="" explicitFocusOrder="0" pos="24 420 344 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="F. Muestreo: " editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15.00000000000000000000" kerning="0.00000000000000000000"
-         bold="0" italic="0" justification="33"/>
-  <TEXTBUTTON name="stopButton" id="2ea543e027d3d15c" memberName="stopButton"
-              virtualName="" explicitFocusOrder="0" pos="24 464 344 24" buttonText="STAHP"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <GROUPCOMPONENT name="new group" id="992b46563bcbb59b" memberName="groupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 56 368 96" title=""/>
+                  virtualName="" explicitFocusOrder="0" pos="24 59 360 56" title=""/>
   <TOGGLEBUTTON name="monoButton" id="69897ee5cb8fc8f6" memberName="monoButton"
-                virtualName="" explicitFocusOrder="0" pos="32 80 88 24" buttonText="IR Mono"
+                virtualName="" explicitFocusOrder="0" pos="32 78 152 24" buttonText="IR Mono/Est&#233;reo"
                 connectedEdges="0" needsCallback="1" radioGroupId="1" state="0"/>
   <TOGGLEBUTTON name="interleveadStereoButton" id="eda4422c7fb17ef5" memberName="interleveadStereoButton"
-                virtualName="" explicitFocusOrder="0" pos="173 80 184 24" buttonText="IR Est&#233;reo Entrelazado"
+                virtualName="" explicitFocusOrder="0" pos="216 78 160 24" buttonText="IR Muti-Mono"
                 connectedEdges="0" needsCallback="1" radioGroupId="1" state="0"/>
-  <TOGGLEBUTTON name="multiMonoStereoButton" id="7ba3f9175a3e823b" memberName="multiMonoStereoButton"
-                virtualName="" explicitFocusOrder="0" pos="32 117 184 24" buttonText="IR Est&#233;reo Multi-Mono"
-                connectedEdges="0" needsCallback="1" radioGroupId="1" state="0"/>
+  <LABEL name="channelsLabel" id="74d3b60a39986aa2" memberName="channelsLabel"
+         virtualName="" explicitFocusOrder="0" pos="24 232 344 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Configuraci&#243;n&#10;" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.00000000000000000000" kerning="0.00000000000000000000"
+         bold="0" italic="0" justification="33"/>
+  <TEXTBUTTON name="processButton" id="d1c73ddfc2004d74" memberName="processButton"
+              virtualName="" explicitFocusOrder="0" pos="32 488 344 24" buttonText="Procesar"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

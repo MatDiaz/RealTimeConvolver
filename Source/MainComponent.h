@@ -36,34 +36,32 @@ public:
 
 	File loadFiles(const String stringToShow);
     
-    void updateGUI();
-
 	void updateLabelText(File originFile, bool rightChannel, double samplingFrequency);
+
+	void buttonProcessChange();
 
 private:
     //==============================================================================
     // Your private member variables go here...
 
-    ScopedPointer<TextButton> leftButton;
-    ScopedPointer<TextButton> rightButton;
+    ScopedPointer<TextButton> loadButton;
     ScopedPointer<Label> nameLabelLeft;
     ScopedPointer<Label> leftAdress;
     ScopedPointer<Label> fsLabelLeft;
-    ScopedPointer<Label> nameLabelRight;
-    ScopedPointer<Label> rightAdress;
-    ScopedPointer<Label> fsLabelRight;
-    ScopedPointer<TextButton> stopButton;
     ScopedPointer<GroupComponent> groupComponent;
     ScopedPointer<ToggleButton> monoButton;
     ScopedPointer<ToggleButton> interleveadStereoButton;
-    ScopedPointer<ToggleButton> multiMonoStereoButton;
+    ScopedPointer<Label> channelsLabel;
+    ScopedPointer<TextButton> processButton;
 
 	AudioBuffer<float> audioBufferZero;
-	AudioBuffer<float> audioBufferOne;
     
     AudioFormatManager formatManager;
     
-    bool fileSelected, shouldBeProcessing, isBinaural;
+    bool fileSelected, shouldBeProcessing, isBinaural, shouldRepaint;
+
+	AudioThumbnail audioDrawObject;
+	AudioThumbnailCache audioDrawCache;
 
 	dsp::Convolution convolutionEngine;
 	dsp::ProcessSpec convolutionProperties;
