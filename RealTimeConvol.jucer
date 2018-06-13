@@ -3,6 +3,10 @@
 <JUCERPROJECT name="RealTimeConvol" projectType="guiapp" jucerVersion="5.2.1">
   <MAINGROUP id="vqyl4T" name="RealTimeConvol">
     <GROUP id="{09615A00-EF48-BF94-0EF3-B9627A3E97F4}" name="Source">
+      <FILE id="qOMtAc" name="AudioDrawClass.cpp" compile="1" resource="0"
+            file="Source/AudioDrawClass.cpp"/>
+      <FILE id="UhvuPX" name="AudioDrawClass.h" compile="0" resource="0"
+            file="Source/AudioDrawClass.h"/>
       <FILE id="wywOeI" name="GUIcomponent.cpp" compile="0" resource="0"
             file="Source/GUIcomponent.cpp"/>
       <FILE id="QMh3zU" name="GUIcomponent.h" compile="0" resource="0" file="Source/GUIcomponent.h"/>

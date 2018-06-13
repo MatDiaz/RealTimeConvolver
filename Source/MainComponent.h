@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "AudioDrawClass.h"
 
 //==============================================================================
 /*
@@ -53,6 +54,7 @@ private:
     ScopedPointer<ToggleButton> interleveadStereoButton;
     ScopedPointer<Label> channelsLabel;
     ScopedPointer<TextButton> processButton;
+    ScopedPointer<AudioDrawClass> waveFormDraw;
 
 	AudioBuffer<float> audioBufferZero;
     

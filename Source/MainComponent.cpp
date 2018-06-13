@@ -117,13 +117,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here
-	if (isBinaural)
-	{
-		
-	}
-
-	if (shouldBeProcessing)
+	if (processButton->getToggleState())
 	{
 		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
 		dsp::ProcessContextReplacing<float> ctx(tempAudioBlock);
@@ -131,7 +125,6 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 	}
 	else
 	{
-		// (to prevent the output of random noise)
 		bufferToFill.clearActiveBufferRegion();
 	}
 }
@@ -162,25 +155,25 @@ void MainComponent::updateLabelText(File originFile, bool rightChannel, double s
 
 void MainComponent::buttonProcessChange()
 {
-	if (shouldBeProcessing)
-	{
-		shouldBeProcessing = false;
-		processButton->setButtonText("Procesar");
-	}
-	else
-	{
-		shouldBeProcessing = true;
-		processButton->setButtonText("Detener");
-	}
+    
+    if (processButton->getToggleState())
+    {
+        processButton->setToggleState(false, dontSendNotification);
+        processButton->setButtonText("Procesar");
+    }
+    else
+    {
+        processButton->setToggleState(true, dontSendNotification);
+        processButton->setButtonText("Detener");
+    }
 }
 
 void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 {
-
-	(shouldBeProcessing) ? buttonProcessChange():1;
-
 	if (buttonThatWasClicked == loadButton)
-	{	
+    {
+        if (processButton->getToggleState()){buttonProcessChange();}
+        
 		convolutionEngine.reset();
 
         File outputFile, outputFileL, outputFileR;
@@ -198,7 +191,7 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 		// Si el archivo seleccionado se carga de manera correcta
 	    // El booleano fileSelected se modifica desde el método loadFiles
         if(fileSelected)
-        {	
+        {
 			// Creamos una clase que nos permita leer el archivo de audio que acabamos de crear
 			// Esta clase depende explicitamente del objeto formatManager, creado desde el header
 			// El objeto formatManager es quien permite decodificar los diferentes formatos de audio (.wav, .mp3, .aiff...)
@@ -206,7 +199,9 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
             audioReadOperator = formatManager.createReaderFor(outputFile);
 			// Se crea un lector para el archivo de entrada
             
-            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);			
+            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
+            
+            
 
             // Se leen los datos como tal y se guardan en el buffer
             audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, true);
@@ -225,18 +220,24 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 			
 			repaint();
         }
+        else
+        {
+            
+        }
     }
     else if (buttonThatWasClicked == monoButton)
     {
 		loadButton->setButtonText(CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
+        buttonProcessChange();
     }
     else if (buttonThatWasClicked == interleveadStereoButton)
     {
 		loadButton->setButtonText("Cargar IR Multi-Mono");
+        buttonProcessChange();
     }
 	else if (buttonThatWasClicked == processButton)
 	{
-		buttonProcessChange();
+        buttonProcessChange();
 	}
 }
 
@@ -290,7 +291,7 @@ void MainComponent::paint (Graphics& g)
 			g.setColour(Colours::white);
 			g.fillRect(thumbnailBounds);
 			g.setColour(Colours::white);
-			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 1.0f);
+			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 0.0f);
 		}
     }
 }
