@@ -57,6 +57,7 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
     addAndMakeVisible (monoButton = new ToggleButton ("monoButton"));
     monoButton->setButtonText (CharPointer_UTF8("IR Mono/Est\xc3\xa9reo"));
     monoButton->setRadioGroupId (1);
+	monoButton->setToggleState(true, dontSendNotification);
     monoButton->addListener (this);
 
     monoButton->setBounds (32, 78, 152, 24);
@@ -155,7 +156,6 @@ void MainComponent::updateLabelText(File originFile, bool rightChannel, double s
 
 void MainComponent::buttonProcessChange()
 {
-    
     if (processButton->getToggleState())
     {
         processButton->setToggleState(false, dontSendNotification);
@@ -185,7 +185,8 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 		else if (interleveadStereoButton->getToggleState())
 		{
 			outputFileL = loadFiles("Ingrese Archivo L");
-			outputFileR = loadFiles("Ingrese Archivo R");
+			if (fileSelected) { outputFileR = loadFiles("Ingrese Archivo R"); }
+			else {}
 		}
 
 		// Si el archivo seleccionado se carga de manera correcta
@@ -199,9 +200,7 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
             audioReadOperator = formatManager.createReaderFor(outputFile);
 			// Se crea un lector para el archivo de entrada
             
-            audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
-            
-            
+			audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
 
             // Se leen los datos como tal y se guardan en el buffer
             audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, true);
@@ -228,12 +227,10 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == monoButton)
     {
 		loadButton->setButtonText(CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
-        buttonProcessChange();
     }
     else if (buttonThatWasClicked == interleveadStereoButton)
     {
 		loadButton->setButtonText("Cargar IR Multi-Mono");
-        buttonProcessChange();
     }
 	else if (buttonThatWasClicked == processButton)
 	{
@@ -284,14 +281,14 @@ void MainComponent::paint (Graphics& g)
         g.setColour (strokeColour);
         g.drawRoundedRectangle (x, y, width, height, 10.000f, 0.500f);
 
-		Rectangle<int> thumbnailBounds(x, y, width, height);
+		Rectangle<int> thumbnailBounds(x, y, width*0.9, height*0.9);
 
 		if (shouldRepaint)
 		{	
-			g.setColour(Colours::white);
+			g.setColour(Colours::transparentWhite);
 			g.fillRect(thumbnailBounds);
 			g.setColour(Colours::white);
-			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 0.0f);
+			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 1.0f);
 		}
     }
 }
