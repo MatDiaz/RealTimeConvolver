@@ -11,7 +11,7 @@
 //==============================================================================
 MainComponent::MainComponent():
 fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
-,audioDrawCache(5), audioDrawObject(512, formatManager, audioDrawCache)
+,audioDrawObject(2048, formatManager, audioDrawCache), audioDrawCache(1)
 {
     addAndMakeVisible (loadButton = new TextButton ("loadButton"));
     loadButton->setButtonText (CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
@@ -281,14 +281,14 @@ void MainComponent::paint (Graphics& g)
         g.setColour (strokeColour);
         g.drawRoundedRectangle (x, y, width, height, 10.000f, 0.500f);
 
-		Rectangle<int> thumbnailBounds(x, y, width*0.9, height*0.9);
+		Rectangle<int> thumbnailBounds(x*1.05, y*1.025, width*0.9, height*0.9);
 
 		if (shouldRepaint)
 		{	
 			g.setColour(Colours::transparentWhite);
 			g.fillRect(thumbnailBounds);
-			g.setColour(Colours::white);
-			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 1.0f);
+			g.setColour(Colour (0xc1ffffff));
+			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 3.0f);
 		}
     }
 }
