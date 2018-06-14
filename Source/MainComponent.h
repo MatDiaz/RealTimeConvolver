@@ -17,7 +17,8 @@
     your controls and content.
 */
 class MainComponent   : public AudioAppComponent,
-                        public Button::Listener
+                        public Button::Listener,
+						private Timer
 {
 public:
     //==============================================================================
@@ -35,9 +36,13 @@ public:
     
     void buttonClicked (Button* buttonThatWasClicked) override;
 
-	File loadFiles(const String stringToShow);
+	void userTriedToCloseWindow() override;
+
+	File loadFiles (const String stringToShow);
     
-	void updateLabelText(File originFile, bool rightChannel, double samplingFrequency);
+	void updateLabelText (File originFile, bool rightChannel, double samplingFrequency);
+
+	void timerCallback() override;
 
 	void buttonProcessChange();
 
@@ -54,7 +59,8 @@ private:
     ScopedPointer<ToggleButton> interleveadStereoButton;
     ScopedPointer<Label> channelsLabel;
     ScopedPointer<TextButton> processButton;
-    ScopedPointer<AudioDrawClass> waveFormDraw;
+	ScopedPointer<AlertWindow> errorMessage;
+	ScopedPointer<AudioDrawClass> realTimeDraw;
 
 	AudioBuffer<float> audioBufferZero;
     

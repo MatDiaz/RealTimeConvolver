@@ -85,15 +85,23 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
 
     processButton->setBounds (32, 488, 344, 24);
 
+	addAndMakeVisible (errorMessage = new AlertWindow("Error", "Error generico", AlertWindow::WarningIcon, nullptr));
+	errorMessage->setEscapeKeyCancels(true);
+
+	addAndMakeVisible(realTimeDraw = new AudioDrawClass(3));
+
     setSize (400, 530);
 
     setAudioChannels (2, 2);
     
     formatManager.registerBasicFormats();
+
+	startTimer(60);
 }
 
 MainComponent::~MainComponent()
-{   
+{	
+	errorMessage = nullptr;
 	loadButton = nullptr;
 	nameLabelLeft = nullptr;
 	leftAdress = nullptr;
@@ -154,22 +162,35 @@ void MainComponent::updateLabelText(File originFile, bool rightChannel, double s
 	else { channelsLabel->setText(CharPointer_UTF8("Configuraci\xc3\xb3n: Mono"), dontSendNotification);}
 }
 
+void MainComponent::timerCallback()
+{
+	if (processButton->getToggleState)
+	{
+		
+	}
+}
+
 void MainComponent::buttonProcessChange()
 {
     if (processButton->getToggleState())
     {
         processButton->setToggleState(false, dontSendNotification);
         processButton->setButtonText("Procesar");
+		shouldRepaint = true;
     }
     else
     {
         processButton->setToggleState(true, dontSendNotification);
+		shouldRepaint = false;
         processButton->setButtonText("Detener");
     }
+
+	repaint();
 }
 
 void MainComponent::buttonClicked (Button* buttonThatWasClicked)
-{
+{	
+
 	if (buttonThatWasClicked == loadButton)
     {
         if (processButton->getToggleState()){buttonProcessChange();}
@@ -180,49 +201,62 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
         
 		if (monoButton->getToggleState())
 		{
-			outputFile = loadFiles("Ingrese Archivo Mono");
+			outputFile = loadFiles("Ingrese Archivo Mono o Estereo");
+
+			if (fileSelected)
+			{
+				ScopedPointer<AudioFormatReader> audioReadOperator;
+
+				audioReadOperator = formatManager.createReaderFor(outputFile);
+
+				audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
+
+				(audioReadOperator->numChannels == 2) ? isBinaural = true : isBinaural = false;
+
+				audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, isBinaural);
+
+				convolutionEngine.prepare(convolutionProperties);
+
+				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
+
+				updateLabelText(outputFile, isBinaural, audioReadOperator->sampleRate);
+
+				audioDrawObject.setSource(new FileInputSource(outputFile));
+
+				shouldRepaint = true;
+
+				repaint();
+			}
+			else
+			{
+				errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr);
+			}
 		}
 		else if (interleveadStereoButton->getToggleState())
 		{
 			outputFileL = loadFiles("Ingrese Archivo L");
 			if (fileSelected) { outputFileR = loadFiles("Ingrese Archivo R"); }
-			else {}
+			else { errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr); }
+
+			if (fileSelected)
+			{
+				ScopedPointer<AudioFormatReader> audioReadOperatorLeft, audioReadOperatorRight;
+				audioReadOperatorLeft = formatManager.createReaderFor(outputFileL);
+				audioReadOperatorRight = formatManager.createReaderFor(outputFileR);
+
+				AudioBuffer<float> tempAudioBuffer, tempAudioBufferL, tempAudioBufferR;
+				tempAudioBufferL.setSize(1, (int)audioReadOperatorLeft->lengthInSamples);
+				audioReadOperatorLeft->read(&tempAudioBufferL, 0, (int)audioReadOperatorLeft->lengthInSamples, 0, true, false);
+
+				tempAudioBufferR.setSize(1, (int)audioReadOperatorLeft->lengthInSamples);
+				audioReadOperatorLeft->read(&tempAudioBufferL, 0, (int)audioReadOperatorLeft->lengthInSamples, 0, true, false);
+
+				tempAudioBuffer.setSize(2, (int)audioReadOperatorLeft->lengthInSamples);
+								
+
+
+			}
 		}
-
-		// Si el archivo seleccionado se carga de manera correcta
-	    // El booleano fileSelected se modifica desde el método loadFiles
-        if(fileSelected)
-        {
-			// Creamos una clase que nos permita leer el archivo de audio que acabamos de crear
-			// Esta clase depende explicitamente del objeto formatManager, creado desde el header
-			// El objeto formatManager es quien permite decodificar los diferentes formatos de audio (.wav, .mp3, .aiff...)
-            ScopedPointer<AudioFormatReader> audioReadOperator;
-            audioReadOperator = formatManager.createReaderFor(outputFile);
-			// Se crea un lector para el archivo de entrada
-            
-			audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
-
-            // Se leen los datos como tal y se guardan en el buffer
-            audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, true);
-
-			(audioReadOperator->numChannels == 2) ? isBinaural = true: isBinaural = false;
-
-			convolutionEngine.prepare(convolutionProperties);
-
-			convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
-
-			updateLabelText(outputFile, isBinaural, audioReadOperator->sampleRate);
-
-			audioDrawObject.setSource(new FileInputSource(outputFile));
-
-			shouldRepaint = true;
-			
-			repaint();
-        }
-        else
-        {
-            
-        }
     }
     else if (buttonThatWasClicked == monoButton)
     {
@@ -236,6 +270,11 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 	{
         buttonProcessChange();
 	}
+}
+
+void MainComponent::userTriedToCloseWindow()
+{
+	if (processButton->getToggleState()) { buttonProcessChange(); }
 }
 
 File MainComponent::loadFiles(const String stringToShow)
@@ -295,7 +334,5 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+   
 }

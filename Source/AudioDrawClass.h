@@ -18,11 +18,17 @@
 class AudioDrawClass    : public Component
 {
 public:
-    AudioDrawClass();
+    AudioDrawClass(int updateFrequency);
     ~AudioDrawClass();
 
     void paint (Graphics&) override;
     void resized() override;
+
+	void updateBufferToDraw(AudioBuffer<float>* bufferToReplace);
+
+	void repaintComponent(bool shouldReplaceBuffer);
+
+	bool shouldRepaint;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDrawClass)

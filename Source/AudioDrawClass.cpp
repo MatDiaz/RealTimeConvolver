@@ -12,15 +12,14 @@
 #include "AudioDrawClass.h"
 
 //==============================================================================
-AudioDrawClass::AudioDrawClass()
-{
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+  AudioDrawClass::AudioDrawClass(int updateFrequency)
+ {
 
-}
+ }
 
-AudioDrawClass::~AudioDrawClass()
+  AudioDrawClass::~AudioDrawClass()
 {
+
 }
 
 void AudioDrawClass::paint (Graphics& g)
@@ -30,7 +29,13 @@ void AudioDrawClass::paint (Graphics& g)
 
 void AudioDrawClass::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
 
+}
+
+void AudioDrawClass::updateBufferToDraw(AudioBuffer<float>* bufferToReplace)
+{
+}
+
+void AudioDrawClass::repaintComponent(bool shouldReplaceBuffer)
+{
 }
