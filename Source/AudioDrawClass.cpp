@@ -12,7 +12,8 @@
 #include "AudioDrawClass.h"
 
 //==============================================================================
-  AudioDrawClass::AudioDrawClass(int updateFrequency)
+AudioDrawClass::AudioDrawClass(int updateFrequency):
+	shouldRepaint(false)
  {
 
  }
@@ -24,7 +25,17 @@
 
 void AudioDrawClass::paint (Graphics& g)
 {
-    
+	if (shouldRepaint)
+	{
+		Path drawPath;
+
+		drawPath.startNewSubPath(0, round(getHeight()/2));
+
+		for (int i = 0; i < getWidth(); i++)
+		{
+
+		}
+	}
 }
 
 void AudioDrawClass::resized()
@@ -32,8 +43,10 @@ void AudioDrawClass::resized()
 
 }
 
-void AudioDrawClass::updateBufferToDraw(AudioBuffer<float>* bufferToReplace)
+void AudioDrawClass::updateBufferToDraw(AudioBuffer<float> bufferToReplace)
 {
+	bufferToDraw = bufferToReplace;
+	shouldRepaint = true;
 }
 
 void AudioDrawClass::repaintComponent(bool shouldReplaceBuffer)

@@ -42,6 +42,10 @@ public:
     
 	void updateLabelText (File originFile, bool rightChannel, double samplingFrequency);
 
+	void updateThumbnail(bool isStereo, int totalLength, AudioFormatReader* currentReader, AudioBuffer<float> currentAudioBuffer);
+
+	void updateConvolutionEngine(AudioBuffer<float> currentAudioBuffer, AudioFormatReader* currentReader, bool isStereo);
+
 	void timerCallback() override;
 
 	void buttonProcessChange();

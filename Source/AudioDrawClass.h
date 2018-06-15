@@ -24,12 +24,13 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
-	void updateBufferToDraw(AudioBuffer<float>* bufferToReplace);
+	void updateBufferToDraw(AudioBuffer<float> bufferToReplace);
 
 	void repaintComponent(bool shouldReplaceBuffer);
 
 	bool shouldRepaint;
 
 private:
+	AudioBuffer<float> bufferToDraw;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDrawClass)
 };

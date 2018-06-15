@@ -101,7 +101,6 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
 
 MainComponent::~MainComponent()
 {	
-	errorMessage = nullptr;
 	loadButton = nullptr;
 	nameLabelLeft = nullptr;
 	leftAdress = nullptr;
@@ -162,6 +161,21 @@ void MainComponent::updateLabelText(File originFile, bool rightChannel, double s
 	else { channelsLabel->setText(CharPointer_UTF8("Configuraci\xc3\xb3n: Mono"), dontSendNotification);}
 }
 
+void MainComponent::updateThumbnail(bool isStereo, int totalLength ,AudioFormatReader* currentReader, AudioBuffer<float> currentAudioBuffer)
+{
+	int currentChannels;
+	isStereo ? currentChannels = 2 : currentChannels = 1;
+	audioDrawObject.reset(currentChannels, currentReader->sampleRate);
+	shouldRepaint = true;
+	repaint();
+}
+
+void MainComponent::updateConvolutionEngine(AudioBuffer<float> currentAudioBuffer, AudioFormatReader* currentReader, bool isStereo)
+{	
+	convolutionEngine.prepare(convolutionProperties);
+	convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, currentReader->sampleRate, isStereo, false, false, 0);
+}
+
 void MainComponent::timerCallback()
 {
 	if (processButton->getToggleState())
@@ -194,43 +208,34 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 	if (buttonThatWasClicked == loadButton)
     {
         if (processButton->getToggleState()){buttonProcessChange();}
-        
-		convolutionEngine.reset();
 
         File outputFile, outputFileL, outputFileR;
         
 		if (monoButton->getToggleState())
-		{
+		{ 
 			outputFile = loadFiles("Ingrese Archivo Mono o Estereo");
 
 			if (fileSelected)
 			{
+				convolutionEngine.reset();
+
 				ScopedPointer<AudioFormatReader> audioReadOperator;
 
 				audioReadOperator = formatManager.createReaderFor(outputFile);
 
-				audioBufferZero.setSize(audioReadOperator->numChannels, (int)audioReadOperator->lengthInSamples);
+				int audioLength = (int)audioReadOperator->lengthInSamples;
+
+				audioBufferZero.setSize(audioReadOperator->numChannels, audioLength);
 
 				(audioReadOperator->numChannels == 2) ? isBinaural = true : isBinaural = false;
 
-				audioReadOperator->read(&audioBufferZero, 0, (int)audioReadOperator->lengthInSamples, 0, true, isBinaural);
-
-				convolutionEngine.prepare(convolutionProperties);
-
-				convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, audioReadOperator->sampleRate, true, false, false, 0);
+				audioReadOperator->read(&audioBufferZero, 0, audioLength, 0, true, isBinaural);
 
 				updateLabelText(outputFile, isBinaural, audioReadOperator->sampleRate);
-
-				audioDrawObject.setSource(new FileInputSource(outputFile));
-
-				shouldRepaint = true;
-
-				repaint();
+				updateThumbnail(isBinaural, audioLength, audioReadOperator, audioBufferZero);
+				updateConvolutionEngine(audioBufferZero, audioReadOperator, isBinaural);
 			}
-			else
-			{
-				errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr);
-			}
+			else{ errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr); }
 		}
 		else if (interleveadStereoButton->getToggleState())
 		{
@@ -239,7 +244,9 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 			else { errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr); }
 
 			if (fileSelected)
-			{
+			{	
+				convolutionEngine.reset();
+
 				ScopedPointer<AudioFormatReader> audioReadOperatorLeft, audioReadOperatorRight;
 				audioReadOperatorLeft = formatManager.createReaderFor(outputFileL);
 				audioReadOperatorRight = formatManager.createReaderFor(outputFileR);
@@ -260,14 +267,14 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
                     audioArrayHolder[i]->read(&tempAudioBuffer, 0, audioLength, 0, true, false);
                     audioBufferZero.copyFrom(i, 0, tempAudioBuffer, 0, 0, audioLength);
                 }
-                
-                shouldRepaint = true;
-                audioDrawObject.reset(2, audioArrayHolder[0]->sampleRate);
-                audioDrawObject.addBlock(0, audioBufferZero, 0, audioLength);
-                repaint();
+
+				updateConvolutionEngine(audioBufferZero, audioArrayHolder[0], isBinaural);
+				updateThumbnail(true, audioLength, audioArrayHolder[0], audioBufferZero);
+				updateLabelText(outputFileL, true, audioArrayHolder[0]->sampleRate);
                 
                 audioArrayHolder.clearQuick(false);
 			}
+			else{ errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr); }
 		}
     }
     else if (buttonThatWasClicked == monoButton)
