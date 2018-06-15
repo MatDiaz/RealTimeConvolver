@@ -11,7 +11,7 @@
 //==============================================================================
 MainComponent::MainComponent():
 fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
-,audioDrawObject(2048, formatManager, audioDrawCache), audioDrawCache(1)
+,audioDrawObject(256, formatManager, audioDrawCache), audioDrawCache(1)
 {
     addAndMakeVisible (loadButton = new TextButton ("loadButton"));
     loadButton->setButtonText (CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
@@ -164,7 +164,7 @@ void MainComponent::updateLabelText(File originFile, bool rightChannel, double s
 
 void MainComponent::timerCallback()
 {
-	if (processButton->getToggleState)
+	if (processButton->getToggleState())
 	{
 		
 	}
@@ -243,18 +243,30 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 				ScopedPointer<AudioFormatReader> audioReadOperatorLeft, audioReadOperatorRight;
 				audioReadOperatorLeft = formatManager.createReaderFor(outputFileL);
 				audioReadOperatorRight = formatManager.createReaderFor(outputFileR);
-
-				AudioBuffer<float> tempAudioBuffer, tempAudioBufferL, tempAudioBufferR;
-				tempAudioBufferL.setSize(1, (int)audioReadOperatorLeft->lengthInSamples);
-				audioReadOperatorLeft->read(&tempAudioBufferL, 0, (int)audioReadOperatorLeft->lengthInSamples, 0, true, false);
-
-				tempAudioBufferR.setSize(1, (int)audioReadOperatorLeft->lengthInSamples);
-				audioReadOperatorLeft->read(&tempAudioBufferL, 0, (int)audioReadOperatorLeft->lengthInSamples, 0, true, false);
-
-				tempAudioBuffer.setSize(2, (int)audioReadOperatorLeft->lengthInSamples);
-								
-
-
+                
+                int audioLength = (int)audioReadOperatorLeft->lengthInSamples;
+                
+                OwnedArray<AudioFormatReader> audioArrayHolder;
+                
+                audioArrayHolder.add(audioReadOperatorRight);
+                audioArrayHolder.add(audioReadOperatorLeft);
+                
+                audioBufferZero.setSize(2, audioLength);
+                
+                for (int i = 0; i < audioArrayHolder.size(); i++)
+                {
+                    AudioBuffer<float> tempAudioBuffer;
+                    tempAudioBuffer.setSize(1, audioLength);
+                    audioArrayHolder[i]->read(&tempAudioBuffer, 0, audioLength, 0, true, false);
+                    audioBufferZero.copyFrom(i, 0, tempAudioBuffer, 0, 0, audioLength);
+                }
+                
+                shouldRepaint = true;
+                audioDrawObject.reset(2, audioArrayHolder[0]->sampleRate);
+                audioDrawObject.addBlock(0, audioBufferZero, 0, audioLength);
+                repaint();
+                
+                audioArrayHolder.clearQuick(false);
 			}
 		}
     }
@@ -320,7 +332,7 @@ void MainComponent::paint (Graphics& g)
         g.setColour (strokeColour);
         g.drawRoundedRectangle (x, y, width, height, 10.000f, 0.500f);
 
-		Rectangle<int> thumbnailBounds(x*1.05, y*1.025, width*0.9, height*0.9);
+		Rectangle<int> thumbnailBounds(x*1.05, y*1.025, width*0.995, height*0.9);
 
 		if (shouldRepaint)
 		{	
