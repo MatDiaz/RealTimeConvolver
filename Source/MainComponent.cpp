@@ -11,7 +11,7 @@
 //==============================================================================
 MainComponent::MainComponent():
 fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
-,audioDrawObject(256, formatManager, audioDrawCache), audioDrawCache(1)
+,audioDrawObject(256, formatManager, audioDrawCache), audioDrawCache(1), realTimeDraw(3)
 {
     addAndMakeVisible (loadButton = new TextButton ("loadButton"));
     loadButton->setButtonText (CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
@@ -88,8 +88,8 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
 	addAndMakeVisible (errorMessage = new AlertWindow("Error", "Error generico", AlertWindow::WarningIcon, nullptr));
 	errorMessage->setEscapeKeyCancels(true);
 
-	addAndMakeVisible(realTimeDraw = new AudioDrawClass(3));
-    realTimeDraw->setBounds(29.0f, 305.0f, 356.0f, 168.0f);
+	addAndMakeVisible(&realTimeDraw);
+	realTimeDraw.setBounds(29.0f, 305.0f, 356.0f, 168.0f);
 
     setSize (400, 530);
 
@@ -111,6 +111,7 @@ MainComponent::~MainComponent()
 	interleveadStereoButton = nullptr;
 	channelsLabel = nullptr;
 	processButton = nullptr;
+	errorMessage = nullptr;
 
     // This shuts down the audio device and clears the audio source.
     shutdownAudio();
@@ -118,7 +119,8 @@ MainComponent::~MainComponent()
 
 //==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
-{
+{	
+	realTimeDraw.updateSumArraySize(samplesPerBlockExpected);
 	convolutionProperties.sampleRate = sampleRate;
 	convolutionProperties.maximumBlockSize = samplesPerBlockExpected;
 	convolutionProperties.numChannels = 2;
@@ -131,7 +133,7 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
 		dsp::ProcessContextReplacing<float> ctx(tempAudioBlock);
 		convolutionEngine.process(ctx);
-        realTimeDraw->updateBufferToDraw(*bufferToFill.buffer);
+        realTimeDraw.updateBufferToDraw(*bufferToFill.buffer);
 	}
 	else
 	{
@@ -168,6 +170,7 @@ void MainComponent::updateThumbnail(bool isStereo, int totalLength ,AudioFormatR
 	int currentChannels;
 	isStereo ? currentChannels = 2 : currentChannels = 1;
 	audioDrawObject.reset(currentChannels, currentReader->sampleRate);
+	audioDrawObject.addBlock(0, currentAudioBuffer, 0, totalLength);
 	shouldRepaint = true;
 	repaint();
 }
@@ -180,10 +183,7 @@ void MainComponent::updateConvolutionEngine(AudioBuffer<float> currentAudioBuffe
 
 void MainComponent::timerCallback()
 {
-	if (processButton->getToggleState())
-	{
-        realTimeDraw->repaintComponent(true);
-	}
+	realTimeDraw.repaintComponent(processButton->getToggleState());
 }
 
 void MainComponent::buttonProcessChange()

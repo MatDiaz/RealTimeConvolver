@@ -26,12 +26,16 @@ public:
 
 	void updateBufferToDraw(AudioBuffer<float> bufferToReplace);
 
-	void repaintComponent(bool shouldReplaceBuffer);
+	void repaintComponent(bool shouldBeRepainting);
+
+	void updateSumArraySize(int newSize);
 
 private:
 	AudioBuffer<float> bufferToDraw;
+	AudioBuffer<float> tempDrawBuffer;
+	ScopedPointer<float> sumArray;
     bool shouldRepaint;
-    int internalCounter;
+    int internalCounter, sizeMultiplier, refreshRate;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDrawClass)
 };

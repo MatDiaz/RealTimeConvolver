@@ -64,7 +64,7 @@ private:
     ScopedPointer<Label> channelsLabel;
     ScopedPointer<TextButton> processButton;
 	ScopedPointer<AlertWindow> errorMessage;
-	ScopedPointer<AudioDrawClass> realTimeDraw;
+	AudioDrawClass realTimeDraw;
 
 	AudioBuffer<float> audioBufferZero;
     
