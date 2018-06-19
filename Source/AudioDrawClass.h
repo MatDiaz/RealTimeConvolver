@@ -28,9 +28,10 @@ public:
 
 	void repaintComponent(bool shouldReplaceBuffer);
 
-	bool shouldRepaint;
-
 private:
 	AudioBuffer<float> bufferToDraw;
+    bool shouldRepaint;
+    int internalCounter;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDrawClass)
 };

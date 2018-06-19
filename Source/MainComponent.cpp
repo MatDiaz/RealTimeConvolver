@@ -89,6 +89,7 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
 	errorMessage->setEscapeKeyCancels(true);
 
 	addAndMakeVisible(realTimeDraw = new AudioDrawClass(3));
+    realTimeDraw->setBounds(29.0f, 305.0f, 356.0f, 168.0f);
 
     setSize (400, 530);
 
@@ -96,7 +97,7 @@ fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint
     
     formatManager.registerBasicFormats();
 
-	startTimer(60);
+	startTimer(20);
 }
 
 MainComponent::~MainComponent()
@@ -130,6 +131,7 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
 		dsp::ProcessContextReplacing<float> ctx(tempAudioBlock);
 		convolutionEngine.process(ctx);
+        realTimeDraw->updateBufferToDraw(*bufferToFill.buffer);
 	}
 	else
 	{
@@ -180,7 +182,7 @@ void MainComponent::timerCallback()
 {
 	if (processButton->getToggleState())
 	{
-		
+        realTimeDraw->repaintComponent(true);
 	}
 }
 
@@ -342,10 +344,10 @@ void MainComponent::paint (Graphics& g)
 		Rectangle<int> thumbnailBounds(x*1.05, y*1.025, width*0.995, height*0.9);
 
 		if (shouldRepaint)
-		{	
+		{
 			g.setColour(Colours::transparentWhite);
 			g.fillRect(thumbnailBounds);
-			g.setColour(Colour (0xc1ffffff));
+            g.setColour(Colours::white);
 			audioDrawObject.drawChannels(g, thumbnailBounds, 0, audioDrawObject.getTotalLength(), 3.0f);
 		}
     }
