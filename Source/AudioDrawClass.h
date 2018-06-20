@@ -23,11 +23,15 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
-
+	// Este metodo permite actualizar el buffer que se esta graficando
+	// actualment
 	void updateBufferToDraw(AudioBuffer<float> bufferToReplace);
-
+	
+	// Este metodo se debe llamar desde el componente principal
 	void repaintComponent(bool shouldBeRepainting);
 
+	// Este metodo sirve para actualizar el arreglo de datos que contiene
+	// la informacion por fotograma
 	void updateSumArraySize(int newSize);
 
 private:
