@@ -34,7 +34,7 @@ private:
 	AudioBuffer<float> bufferToDraw;
 	AudioBuffer<float> tempDrawBuffer;
 	ScopedPointer<float> sumArray;
-    bool shouldRepaint;
+    bool shouldRepaint, shouldReplace;
     int internalCounter, sizeMultiplier, refreshRate;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioDrawClass)

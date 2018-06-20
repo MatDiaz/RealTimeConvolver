@@ -13,7 +13,7 @@
 
 //==============================================================================
 AudioDrawClass::AudioDrawClass(int updateFrequency):
-	shouldRepaint(false), internalCounter(0), sizeMultiplier(1), refreshRate(updateFrequency)
+	shouldRepaint(false), internalCounter(0), sizeMultiplier(1), refreshRate(updateFrequency), shouldReplace(true)
  {
      bufferToDraw.setSize (1, getWidth());
 	 tempDrawBuffer.setSize (1, getWidth());
@@ -38,21 +38,24 @@ void AudioDrawClass::paint (Graphics& g)
 
 		drawPath.startNewSubPath(0, round(getHeight()/2));
         
-        const float* channelN = bufferToDraw.getReadPointer(0);
+        const float* channelN = tempDrawBuffer.getReadPointer(0);
         
 		for (int i = 0; i < getWidth(); i++)
 		{	
-			int pathPoint = channelN[i * sizeMultiplier];
-			pathPoint = ((pathPoint + (getHeight() / 2)) * getHeight());
+			int pathPoint = ((channelN[i * sizeMultiplier] + (sumArray[i * sizeMultiplier] * internalCounter)) * getHeight()/2) + (getHeight()/2);
             drawPath.lineTo(i, pathPoint);
 		}
-
-		internalCounter++;
-
-		if (internalCounter >= refreshRate) { internalCounter = 1; }
         
         g.setColour (Colour (0x97ffffff));
         g.strokePath (drawPath, PathStrokeType(1.0f));
+
+		internalCounter++;
+
+		if (internalCounter >= refreshRate)
+        {
+            shouldReplace = true;
+            internalCounter = 1;
+        }
 	}
 }
 
@@ -63,7 +66,7 @@ void AudioDrawClass::resized()
 
 void AudioDrawClass::updateBufferToDraw(AudioBuffer<float> bufferToReplace)
 {
-	if (shouldRepaint)
+	if (shouldRepaint && shouldReplace)
     {
 		tempDrawBuffer = bufferToDraw;
 		bufferToDraw = bufferToReplace;
@@ -75,9 +78,9 @@ void AudioDrawClass::updateBufferToDraw(AudioBuffer<float> bufferToReplace)
 		const float*  startValue = tempDrawBuffer.getReadPointer(0);
 
 		for (int i = 0; i < tempDrawBuffer.getNumSamples(); i++)
-		{
-			sumArray[i] = (destinationValue[i] - startValue[i]) / ((float)refreshRate);
-		}
+			sumArray[i] = (destinationValue[i] - startValue[i]) / ((float) refreshRate);
+        
+        shouldReplace = false;
     }
 }
 

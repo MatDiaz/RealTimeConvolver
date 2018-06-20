@@ -10,8 +10,8 @@
 
 //==============================================================================
 MainComponent::MainComponent():
-fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
-,audioDrawObject(256, formatManager, audioDrawCache), audioDrawCache(1), realTimeDraw(3)
+realTimeDraw(4), fileSelected(false), shouldBeProcessing(false), isBinaural(false), shouldRepaint(false)
+, audioDrawObject(256, formatManager, audioDrawCache), audioDrawCache(1)
 {
     addAndMakeVisible (loadButton = new TextButton ("loadButton"));
     loadButton->setButtonText (CharPointer_UTF8("Cargar IR Mono/Est\xc3\xa9reo"));
@@ -178,7 +178,7 @@ void MainComponent::updateThumbnail(bool isStereo, int totalLength ,AudioFormatR
 void MainComponent::updateConvolutionEngine(AudioBuffer<float> currentAudioBuffer, AudioFormatReader* currentReader, bool isStereo)
 {	
 	convolutionEngine.prepare(convolutionProperties);
-	convolutionEngine.copyAndLoadImpulseResponseFromBuffer(audioBufferZero, currentReader->sampleRate, isStereo, false, false, 0);
+	convolutionEngine.copyAndLoadImpulseResponseFromBuffer(currentAudioBuffer, currentReader->sampleRate, isStereo, false, false, 0);
 }
 
 void MainComponent::timerCallback()
@@ -212,6 +212,7 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
         if (processButton->getToggleState()){buttonProcessChange();}
 
         File outputFile, outputFileL, outputFileR;
+        AudioBuffer<float> localAudioBuffer;
         
 		if (monoButton->getToggleState())
 		{ 
@@ -227,15 +228,17 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 
 				int audioLength = (int)audioReadOperator->lengthInSamples;
 
-				audioBufferZero.setSize(audioReadOperator->numChannels, audioLength);
+				localAudioBuffer.setSize(audioReadOperator->numChannels, audioLength);
 
 				(audioReadOperator->numChannels == 2) ? isBinaural = true : isBinaural = false;
 
-				audioReadOperator->read(&audioBufferZero, 0, audioLength, 0, true, isBinaural);
+				audioReadOperator->read(&localAudioBuffer, 0, audioLength, 0, true, isBinaural);
 
 				updateLabelText(outputFile, isBinaural, audioReadOperator->sampleRate);
-				updateThumbnail(isBinaural, audioLength, audioReadOperator, audioBufferZero);
-				updateConvolutionEngine(audioBufferZero, audioReadOperator, isBinaural);
+				updateThumbnail(isBinaural, audioLength, audioReadOperator, localAudioBuffer);
+				updateConvolutionEngine(localAudioBuffer, audioReadOperator, isBinaural);
+                
+                audioReadOperator = nullptr;
 			}
 			else{ errorMessage->showMessageBoxAsync(AlertWindow::WarningIcon, "Error", "Ningun Archivo Seleccionado", "Ok", nullptr); }
 		}
@@ -260,18 +263,18 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
                 audioArrayHolder.add(audioReadOperatorRight);
                 audioArrayHolder.add(audioReadOperatorLeft);
                 
-                audioBufferZero.setSize(2, audioLength);
+                localAudioBuffer.setSize(2, audioLength);
                 
                 for (int i = 0; i < audioArrayHolder.size(); i++)
                 {
                     AudioBuffer<float> tempAudioBuffer;
                     tempAudioBuffer.setSize(1, audioLength);
                     audioArrayHolder[i]->read(&tempAudioBuffer, 0, audioLength, 0, true, false);
-                    audioBufferZero.copyFrom(i, 0, tempAudioBuffer, 0, 0, audioLength);
+                    localAudioBuffer.copyFrom(i, 0, tempAudioBuffer, 0, 0, audioLength);
                 }
 
-				updateConvolutionEngine(audioBufferZero, audioArrayHolder[0], isBinaural);
-				updateThumbnail(true, audioLength, audioArrayHolder[0], audioBufferZero);
+				updateConvolutionEngine(localAudioBuffer, audioArrayHolder[0], isBinaural);
+				updateThumbnail(true, audioLength, audioArrayHolder[0], localAudioBuffer);
 				updateLabelText(outputFileL, true, audioArrayHolder[0]->sampleRate);
                 
                 audioArrayHolder.clearQuick(false);
