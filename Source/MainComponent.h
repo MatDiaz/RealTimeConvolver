@@ -9,7 +9,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-// AudioDrawClass es una clase creada por mi, para manejar la graficaciÛn del osciloscopio
+// AudioDrawClass es una clase creada por mi, para manejar la graficaci√≥n del osciloscopio
 // de manera independiente al componente principal
 #include "AudioDrawClass.h"
 
@@ -49,7 +49,7 @@ public:
 	// Este metodo sirve para juntar todos los pasos necesarios para cargar un archivo, devuelve el archivo
 	File loadFiles (const String stringToShow);
     
-	// Este metodo sirve para actualizar los campos de texto creados en la interfaz gr·fica
+	// Este metodo sirve para actualizar los campos de texto creados en la interfaz gr√°fica
 	void updateLabelText (File originFile, bool rightChannel, double samplingFrequency);
 
 	// Este metodo sirve para actualizar la imagen del archivo cargado en la interfaz grafica

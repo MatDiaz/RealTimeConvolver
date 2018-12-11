@@ -14,7 +14,7 @@ MainComponent::MainComponent():
 // Estas lineas de codigo corresponden a la inicializacion de las diferentes variables
 // declaradas en el header, No hay diferencia si esta inicializacion se hace dentro del
 // cuerpo del constructor
-realTimeDraw(8), 
+realTimeDraw(9), 
 fileSelected(false), 
 shouldBeProcessing(false), 
 isBinaural(false), 
@@ -105,7 +105,7 @@ audioDrawCache(1)
 	//Se definen coordenadas X,Y y dimensiones: Alto y Ancho
 	realTimeDraw.setBounds(29.0f, 305.0f, 356.0f, 168.0f);
 
-	// Se asigna un tamaÒo a la ventana
+	// Se asigna un tama√±o a la ventana
     setSize (400, 530);
 
 	// Se define una configuracion de canales
@@ -144,7 +144,7 @@ MainComponent::~MainComponent()
 // Este metodo se llama antes de inicializar el motor de audio
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {	
-	// Pasamos el tamaÒo de Buffer al objeto de osciloscopio
+	// Pasamos el tama√±o de Buffer al objeto de osciloscopio
 	realTimeDraw.updateSumArraySize(samplesPerBlockExpected);
 	// Se asignan las propiedades del motor de reproduccion
 	// a las propiedades de la convolucion
@@ -153,7 +153,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 	convolutionProperties.numChannels = 2;
 }
 
-// En este metodo se realiza todo el procesamiento a las seÒales entrantes
+// En este metodo se realiza todo el procesamiento a las se√±ales entrantes
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {	
 	// Se comprueba si el boton de procesamiento esta encendido
@@ -162,7 +162,7 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 		// La libreria de JUCE requiere de un objeto especifico para
 		// poder realizar su procesmiento de audio, uno se pregunta por que
 		// no puede ser el mismo objeto AudioBuffer, y la respuesta es
-		// por que aj·.
+		// por que aj√°.
 		dsp::AudioBlock<float> tempAudioBlock(*bufferToFill.buffer);
 		// Adicionalmente hay que crear un contexto ( entiendase un contexto como
 		// un flujo donde se procesaran los datos, es independiente al thread principal)
@@ -227,7 +227,7 @@ void MainComponent::updateConvolutionEngine(AudioBuffer<float> currentAudioBuffe
 // Este es el metodo que se llama periodicamente, sirve principalmente para llama al objeto realTimeDraw y refrescar el buffer de datos
 void MainComponent::timerCallback()
 {	
-	// Si el boton esta encendido entonces se grafica las seÒal, si esta apagado entonces no se grafica nada
+	// Si el boton esta encendido entonces se grafica las se√±al, si esta apagado entonces no se grafica nada
 	realTimeDraw.repaintComponent(processButton->getToggleState());
 }
 
@@ -281,7 +281,7 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
 				// Guardamos la cantidad de muestras del archivo en una variable, pues
 				// va a ser utilizada varias veces mas adelante
 				int audioLength = (int)audioReadOperator->lengthInSamples;
-				// Se le asigna el tamaÒo al buffer para que pueda almacenar el archivo de audio cargado
+				// Se le asigna el tama√±o al buffer para que pueda almacenar el archivo de audio cargado
 				localAudioBuffer.setSize(audioReadOperator->numChannels, audioLength);
 				// Se determina si es mono o estereo
 				(audioReadOperator->numChannels == 2) ? isBinaural = true : isBinaural = false;
@@ -329,7 +329,7 @@ void MainComponent::buttonClicked (Button* buttonThatWasClicked)
                 // Agregamos los dos lectores a este array 
                 audioArrayHolder.add(audioReadOperatorRight);
                 audioArrayHolder.add(audioReadOperatorLeft);
-                // Se le da el tamaÒo al buffer que guardara los datos del audio
+                // Se le da el tama√±o al buffer que guardara los datos del audio
                 localAudioBuffer.setSize(2, audioLength);
                 
 				// Se crea un ciclo para leer los datos de los archivos de audio
